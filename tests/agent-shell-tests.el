@@ -582,7 +582,8 @@
 Found 6 files
 /path/to/file1.md
 /path/to/file2.md
-```")))
+```
+")))
 
     ;; Test with minimal parameters
     (let ((entry (agent-shell--make-transcript-tool-call-entry
@@ -595,7 +596,8 @@ Found 6 files
 
 ```
 simple output
-```")))
+```
+")))
 
     ;; Test with nil status and title
     (let ((entry (agent-shell--make-transcript-tool-call-entry
@@ -609,7 +611,8 @@ simple output
 
 ```
 output
-```")))
+```
+")))
 
     ;; Test that output whitespace is trimmed
     (let ((entry (agent-shell--make-transcript-tool-call-entry
@@ -622,7 +625,8 @@ output
 
 ```
 output with spaces
-```")))
+```
+")))
 
     ;; Test that code blocks in output are stripped
     (let ((entry (agent-shell--make-transcript-tool-call-entry
@@ -636,10 +640,25 @@ output with spaces
 **Timestamp:** 2025-11-02 18:17:41
 
 ```
-
 code block content
+```
+")))
 
-```")))))
+    ;; Test that code blocks in output are stripped
+    (let ((entry (agent-shell--make-transcript-tool-call-entry
+                  :status "completed"
+                  :title "test"
+                  :output "  \n  ```\ncode block content with spaces\n```\n")))
+      (should (equal entry "
+
+### Tool Call [completed]: test
+
+**Timestamp:** 2025-11-02 18:17:41
+
+```
+code block content with spaces
+```
+")))))
 
 (ert-deftest agent-shell-mcp-servers-test ()
   "Test `agent-shell-mcp-servers' function normalization."

@@ -4054,8 +4054,8 @@ Includes STATUS, TITLE, KIND, DESCRIPTION, COMMAND, and OUTPUT."
    "\n\n"
    "```"
    "\n"
-   (string-trim output
-                "^```\n?" "```$")
+   (string-trim
+    (string-trim (string-trim output) "^```" "```$"))
    "\n"
    "```"
    "\n"))
