@@ -1037,7 +1037,9 @@ If the buffer's file has changed, prompt the user to reload it."
               (with-current-buffer buffer
                 (save-restriction
                   (widen)
-                  (replace-buffer-contents content-buffer)
+                  ;; Set a time-out to prevent locking up on large files
+                  ;; https://github.com/xenodium/agent-shell/issues/168
+                  (replace-buffer-contents content-buffer 1.0)
                   (basic-save-buffer)))))
           (acp-send-response
            :client (map-elt state :client)
