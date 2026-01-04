@@ -1556,13 +1556,6 @@ Set NEW-SESSION to start a separate new session."
 
 Please use 'agent-shell-transcript-file-path-function and unbind old
 variable (see makunbound)"))
-  (with-temp-buffer ;; client-maker needs a buffer (use a temp one)
-    (unless (and (map-elt config :client-maker)
-                 (funcall (map-elt config :client-maker) (current-buffer)))
-      (error "No way to create a new client"))
-    (agent-shell--ensure-executable
-     (map-elt (funcall (map-elt config :client-maker) (current-buffer)) :command)
-     (map-elt config :install-instructions)))
   (let* ((shell-maker-config (agent-shell--make-shell-maker-config
                               :prompt (map-elt config :shell-prompt)
                               :prompt-regexp (map-elt config :shell-prompt-regexp)))
@@ -1578,7 +1571,23 @@ variable (see makunbound)"))
                                      " Agent @ "
                                      (agent-shell--project-name))
                              (map-elt config :mode-line-name))))
+    ;; While sending the first prompt request would already validate
+    ;; finding the ACP agent executable, users have to wait until they
+    ;; type a prompt and send it, only to find out that they are missing
+    ;; the agent executable. This leaves them with an unsuable shell.
+    ;; Better to check on shell creation and bail early (leaving no
+    ;; shell behind).
     (with-current-buffer shell-buffer
+      (unless (and (map-elt config :client-maker)
+                   (funcall (map-elt config :client-maker) (current-buffer)))
+        (kill-buffer shell-buffer)
+        (error "No way to create a new client"))
+      (let ((command (map-elt (funcall (map-elt config :client-maker) (current-buffer)) :command)))
+        (unless (executable-find command)
+          (kill-buffer shell-buffer)
+          (error "%s" (agent-shell--make-missing-executable-error
+                       :executable command
+                       :install-instructions (map-elt config :install-instructions)))))
       ;; Initialize buffer-local state
       (setq-local agent-shell--state (agent-shell--make-state
                                       :buffer shell-buffer
@@ -2178,15 +2187,12 @@ Return file path of the generated SVG."
          (b (round (+ (* b1 (- 1 ratio)) (* b2 ratio)))))
     (format "#%02x%02x%02x" r g b)))
 
-(defun agent-shell--ensure-executable (executable &optional error-message &rest format-args)
-  "Ensure EXECUTABLE exists in PATH or signal error.
-ERROR-MESSAGE defaults to \"Executable %s not found\".
-FORMAT-ARGS are passed to `format' with ERROR-FORMAT."
-  (unless (executable-find executable)
-    (apply #'error (concat (format "Executable \"%s\" not found.  Do you need (add-to-list 'exec-path \"another/path/to/consider/\")?" executable)
-                           (when error-message
-                             "  ")
-                           error-message) format-args)))
+(cl-defun agent-shell--make-missing-executable-error (&key executable install-instructions)
+  "Create error message for missing EXECUTABLE.
+INSTALL-INSTRUCTIONS is optional installation guidance."
+  (concat (format "Executable \"%s\" not found.  Do you need (add-to-list 'exec-path \"another/path/to/consider/\")?" executable)
+          (when install-instructions
+            (concat "  " install-instructions))))
 
 (defun agent-shell--display-buffer (shell-buffer)
   "Toggle agent SHELL-BUFFER display."
