@@ -98,6 +98,7 @@ Returns an agent configuration alist using `agent-shell-make-agent-config'."
    :buffer-name "Auggie"
    :shell-prompt "Auggie> "
    :shell-prompt-regexp "Auggie> "
+   :icon-name "https://www.augmentcode.com/favicon.svg"
    :welcome-function #'agent-shell-auggie--welcome-message
    :client-maker (lambda (buffer)
                    (agent-shell-auggie-make-client :buffer buffer))
