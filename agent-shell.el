@@ -600,7 +600,7 @@ When FORCE is non-nil, skip confirmation prompt."
 (defvar-keymap agent-shell-mode-map
   :parent shell-maker-mode-map
   :doc "Keymap for `agent-shell-mode'."
-  "<tab>" #'agent-shell-next-item
+  "TAB" #'agent-shell-next-item
   "<backtab>" #'agent-shell-previous-item
   "n" #'agent-shell-next-item
   "p" #'agent-shell-previous-item
